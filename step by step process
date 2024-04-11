@@ -1,0 +1,75 @@
+STEP: 1:-
+	Create VPC.
+	Create subnets with in VPC (CDIR range) {one in public range and one in private range}.
+	Create internet gateway.
+	Create route table (2) {one for public connection and one for private connection}.
+	Create NAT gateway.
+	In the route tables connect the public subnet to the internet gateway.
+	In the other route table connect the private subnet to the NAT gateway.
+	In the screen shots below u can observe for the internet flow.
+
+STEP:2 :-
+1.	Create a private MySQL RDS
+  a)	Create a "Dev/Test" MySQL instance
+  b)	Select "Non publicly" available DB
+  c)	DB instance = "flipbasket", UID/PWD = root/password
+  d)	AZ = 2a, create a new SG
+  e)	IMP When the RDS instance is created check the SG to ensure that the "inbound" rule does not have any specific IP address, 
+  instead use the VPC CIDR block of the EC2 instance. Otherwise we will not be able to connect from the EC2 instance
+
+  STEP: 3:-
+	Create 1 EC2 instance
+  o	Use the usual Ubuntu 20.04 LTS AMI in AZ1
+  o	Download a new PEM file and SSH to the instance
+	While creating EC2 connect it to the subnet with in the VPC which we have created in the above step.
+	Connect the EC2 in windows terminal.
+
+
+Step;4: creating security groups for EC2 and RDS
+    	Create two security groups 
+    	1. Security group for EC2
+    	2. Security group for RDS
+Step:5: connecting EC2 with ssh in windows CMD
+
+
+Step:6: installing required packages
+a)	sudo apt update
+b)	sudo apt install mysql-client
+c)	wget https://d6opu47qoi4ee.cloudfront.net/employees.sql
+
+Step: 7: connecting to mysql and creating the database and up load of files to database.
+a)	mysql -h [RDS end point] -u admin -p
+You should get the MySQL prompt after entering the password
+b)	create database employees;
+c)	use employees;
+d)	source employees.sql
+e)	describe employees;
+f)	Note the column names in a text editor from the output of the above command
+g)	Close the mysql terminal
+
+
+Step: 8: Installing required packages to run the python program.
+–	Sudo apt install python2-minimal
+–	sudo apt install python3-pip
+–	sudo pip3 install boto3
+–	sudo pip3 install mysql-connector-python
+–	sudo pip3 install pymysql
+
+
+Step:9: editing the python code
+•	Use the rds.py as the template and update the hostname to the endpoint of your RDS instance
+and run the program
+–	wget https://d6opu47qoi4ee.cloudfront.net/rds.py
+
+
+Step:11: state my observations when we remove the role and rerun the program.
+In the given scenario, despite removing the IAM role for the instance, successful access to the MySQL database from within the VPC CIDR range was maintained. 
+This is attributed to the fact that the RDS is situated in a private subnet within the VPC, and the security group associated with it allows inbound traffic 
+from the entire CIDR range of the VPC.
+To enhance security and restrict database access, it becomes imperative to refine the inbound rules within the security group. The current configuration poses 
+a risk by permitting access from the entire VPC CIDR range. The recommended course of action involves tightening the security group rules to specify only the
+necessary IP addresses or subnets that require access to the MySQL database. By doing so, access to the database can be more precisely controlled, mitigating 
+potential security vulnerabilities associated with overly permissive inbound rules.
+
+
+.......
